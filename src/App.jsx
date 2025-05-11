@@ -1,6 +1,10 @@
 import { useState } from "react";
 
 function App() {
+  const [tasks, setTasks] = useState([]);
+
+  console.log(tasks);
+
   const [openSection, setOpenSection] = useState({
     taskList: false,
     tasks: true,
@@ -14,6 +18,25 @@ function App() {
     }));
   }
 
+  function addTask(task) {
+    setTasks([...tasks, { ...task, completed: false, id: Date.now() }]);
+  }
+
+  function deleteTask(id) {
+    setTasks(tasks.filter((task) => task.id !== id));
+  }
+
+  function compeleteTask(id) {
+    setTasks(
+      tasks.map((task) =>
+        task.id === id ? { ...task, completed: true } : task
+      )
+    );
+  }
+
+  const activeTasks = tasks.filter((task) => !task.completed);
+  const completedTasks = tasks.filter((task) => task.completed);
+
   return (
     <div className="app">
       <div className="task-container">
@@ -24,7 +47,7 @@ function App() {
         >
           +
         </button>
-        {openSection.taskList && <TaskForm />}
+        {openSection.taskList && <TaskForm addTask={addTask} />}
       </div>
       <div className="task-container">
         <h2>Tasks</h2>
@@ -38,7 +61,13 @@ function App() {
           <button className="sort-button">By Date</button>
           <button className="sort-button">By Priority</button>
         </div>
-        {openSection.tasks && <TaskList />}
+        {openSection.tasks && (
+          <TaskList
+            compeleteTask={compeleteTask}
+            deleteTask={deleteTask}
+            activeTasks={activeTasks}
+          />
+        )}
       </div>
       <div className="completed-task-container">
         <h2>Competed Task</h2>
@@ -48,56 +77,106 @@ function App() {
         >
           +
         </button>
-        {openSection.completedTasks && <CompeletedTaskList />}
+        {openSection.completedTasks && (
+          <CompeletedTaskList
+            completedTasks={completedTasks}
+            deleteTask={deleteTask}
+          />
+        )}
       </div>
     </div>
   );
 }
 
-function TaskForm() {
+function TaskForm({ addTask }) {
+  const [title, setTitle] = useState("");
+  const [priority, setPriority] = useState("Low");
+  const [deadline, setDeadLine] = useState("");
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (title.trim() && deadline) {
+      addTask({ title, priority, deadline });
+      setTitle("");
+      setPriority("Low");
+      setDeadLine("");
+    }
+  }
+
   return (
-    <form action="" className="task-form">
-      <input type="text" value={""} placeholder="task title" required />
-      <select value={""}>
+    <form action="" className="task-form" onSubmit={handleSubmit}>
+      <input
+        type="text"
+        value={title}
+        placeholder="task title"
+        required
+        onChange={(e) => setTitle(e.target.value)}
+      />
+      <select value={priority} onChange={(e) => setPriority(e.target.value)}>
         <option value="High">High</option>
         <option value="Medium">Medium</option>
         <option value="Low">Low</option>
       </select>
 
-      <input type="datetime-local" required value={""} />
+      <input
+        type="datetime-local"
+        required
+        value={deadline}
+        onChange={(e) => setDeadLine(e.target.value)}
+      />
       <button type="submit">Add Task</button>
     </form>
   );
 }
 
-function TaskList() {
+function TaskList({ activeTasks, deleteTask, compeleteTask }) {
+  console.log(activeTasks);
   return (
     <ul className="task-list">
-      <TaskItem />
+      {activeTasks.map((task) => (
+        <TaskItem
+          compeleteTask={compeleteTask}
+          deleteTask={deleteTask}
+          task={task}
+        />
+      ))}
     </ul>
   );
 }
 
-function CompeletedTaskList() {
+function CompeletedTaskList({ completedTasks, deleteTask, compeleteTask }) {
   return (
     <ul className="completed-task-list">
-      <TaskItem />
+      {completedTasks.map((task) => (
+        <TaskItem
+          compeleteTask={compeleteTask}
+          deleteTask={deleteTask}
+          task={task}
+          key={task.id}
+        />
+      ))}
     </ul>
   );
 }
 
-function TaskItem() {
+function TaskItem({ task, deleteTask, compeleteTask }) {
+  const { title, priority, deadline, id } = task;
+
   return (
-    <li className="task-item">
+    <li className={`task-item ${priority.toLowerCase()}`}>
       <div className="task-info">
         <div>
-          Title <strong>Medium</strong>
+          {title} <strong>{priority} </strong>
         </div>
-        <div className="task-deadline">Due: {new Date().toLocaleString()}</div>
+        <div className="task-deadline">Due: {deadline} </div>
       </div>
       <div className="task-buttons">
-        <button className="complete-button">Compete</button>
-        <button className="delete-button">Delete</button>
+        <button className="complete-button" onClick={() => compeleteTask(id)}>
+          Compete
+        </button>
+        <button className="delete-button" onClick={() => deleteTask(id)}>
+          Delete
+        </button>
       </div>
     </li>
   );
