@@ -171,9 +171,12 @@ function TaskItem({ task, deleteTask, compeleteTask }) {
         <div className="task-deadline">Due: {deadline} </div>
       </div>
       <div className="task-buttons">
-        <button className="complete-button" onClick={() => compeleteTask(id)}>
-          Compete
-        </button>
+        {task.completed || (
+          <button className="complete-button" onClick={() => compeleteTask(id)}>
+            Compete
+          </button>
+        )}
+
         <button className="delete-button" onClick={() => deleteTask(id)}>
           Delete
         </button>
